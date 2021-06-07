@@ -2,28 +2,48 @@ Vue.prototype.$http = axios;
 Vue.prototype.$apiRoute = "https://api.bscscan.com/api?";
 Vue.prototype.$apiKey = "WRS8IF8SBV2Q6MHN3U4Y5W7HFZS3K91XVV";
 
+// token contracts
 Vue.prototype.$bnbContractAddress = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
 Vue.prototype.$sfundContractAddress = "0x477bc8d23c634c154061869478bce96be6045d12";
 
-Vue.prototype.$cakeLpContractAddress = "0x74fA517715C4ec65EF01d55ad5335f90dce7CC87";
-Vue.prototype.$bakeryLpContractAddress = "0x782f3f0d2b321D5aB7F15cd1665B95EC479Dcfa5";
-Vue.prototype.$julLpContractAddress = "0xF94FD45b0c7F2b305040CeA4958A9Ab8Ee73e1F4";
-// tosdis farm addr
-Vue.prototype.$tosdisCakeLpfarmAddress = "0x0EF7Bd72eca5e2562b87FDf7E83dD30f81A6670B";
-Vue.prototype.$tosdisBakeLpfarmAddress = "0x8186aC36402645cC0B8e913CE4912fB0790bC9e6";
-Vue.prototype.$tosdisJulLpfarmAddress = "0x212a6497CFC9d41B0acdacc340D9993e619829C1";
-// stacking addr
+// Lp informations
+Vue.prototype.$lpList = {
+  // Pancake swap Lp address
+  "0x74fA517715C4ec65EF01d55ad5335f90dce7CC87": 
+  {
+    farmAddress: "0x0EF7Bd72eca5e2562b87FDf7E83dD30f81A6670B", 
+    lpFound: 0
+  },
+  // Bakery swap Lp address
+  "0x782f3f0d2b321D5aB7F15cd1665B95EC479Dcfa5": 
+  {
+    farmAddress: "0x8186aC36402645cC0B8e913CE4912fB0790bC9e6", 
+    lpFound: 0
+  },
+  // Jul swap Lp address
+  "0xF94FD45b0c7F2b305040CeA4958A9Ab8Ee73e1F4": 
+  {
+    farmAddress: "0x212a6497CFC9d41B0acdacc340D9993e619829C1",
+    lpFound: 0
+  }
+}
+// topic known as harvest action
+Vue.prototype.$harvestTopic = "0x933735aa8de6d7547d0126171b2f31b9c34dd00f3ecd4be85a0ba047db4fafef";
 
-Vue.prototype.$tosdisSfundStackingAddress = "0xF17C06eb029F6Ab934E09CA4766eC373A78081B3";
+// staking contracts
+Vue.prototype.$tosdisSfundStakingAddress = "0xF17C06eb029F6Ab934E09CA4766eC373A78081B3";
 Vue.prototype.$startBlock = 6000000;
+// Ids of token in coingecko api
 Vue.prototype.$sfundId = "seedify-fund";
 Vue.prototype.$bnbId = "binancecoin";
 
+// square price component
 Vue.component("coin-info", {
         props: ["name", "infos", "currency", "currencylist"],
         template: '<div><h3>{{ name }}</h3><span>{{ infos[currency].toFixed(4) }} {{ currencylist.find(c => c.value == currency).displayed }} <span class="chgmt"><span v-if="infos[currency+\'_24h_change\'] > 0">+</span>{{ infos[currency+"_24h_change"].toFixed(4) }}%</span></span><span>24h Vol : {{ infos[currency+"_24h_vol"].toFixed(0) }} {{currencylist.find(c => c.value == currency).displayed}}</span></div>'
 });
 
+// Main vue
 new Vue({
     el: "#coin-infos",
     data: {
@@ -42,7 +62,6 @@ new Vue({
         lpnumber: 1,
         walletaddress: null,
         lpfound: 0,
-        lpInfos: new Map(),
         farmingTotalSfund: 0,
         farmingTotalBnb: 0,
         walletsfundsupply: 0,
@@ -79,6 +98,7 @@ new Vue({
         }
         this.fetchTokensPrices();
     },
+    // used to stock some info in user local storage
     watch: {
       walletaddress(walletaddress) {
         localStorage.walletaddress = walletaddress;
@@ -93,47 +113,32 @@ new Vue({
       }
     },
     methods: {
-        getTosDisFarmForLpAddress(address) {
-          if(address == this.$cakeLpContractAddress)
-          {
-            return this.$tosdisCakeLpfarmAddress;
-          }
-          if(address == this.$bakeryLpContractAddress)
-          {
-            return this.$tosdisBakeLpfarmAddress;
-          }
-          if(address == this.$julLpContractAddress)
-          {
-            return this.$tosdisJulLpfarmAddress;
-          }
-        },
         getTokenInLp(lpNumber, tokenTotalAmount, lpTotalSupply) {
           return lpNumber * (tokenTotalAmount / lpTotalSupply);
         },
+
         async getWalletInfos() {
           this.loadingWalletInfos = true;
           this.farmingTotalSfund = 0;
           this.farmingTotalBnb = 0;
           tokenTxList = await this.getTokenTxList();
           tokenTxList.reverse();
-          this.lpInfos.clear();
-          this.lpInfos.set(this.$cakeLpContractAddress, this.threatTokenTx(tokenTxList, this.$cakeLpContractAddress, this.getTosDisFarmForLpAddress(this.$cakeLpContractAddress)));
-          this.lpInfos.set(this.$bakeryLpContractAddress, this.threatTokenTx(tokenTxList, this.$bakeryLpContractAddress, this.getTosDisFarmForLpAddress(this.$bakeryLpContractAddress)));
-          this.lpInfos.set(this.$julLpContractAddress, this.threatTokenTx(tokenTxList, this.$julLpContractAddress, this.getTosDisFarmForLpAddress(this.$julLpContractAddress)));
-          for(const [contractAddress, lpFound] of this.lpInfos) {
-            if(lpFound > 0)
+          for(const [lpContractAddress, farmInfos] of Object.entries(this.$lpList)) {
+            farmInfos["lpFound"] = this.threatTokenTx(tokenTxList, lpContractAddress, farmInfos["farmAddress"]);
+            if(farmInfos["lpFound"] > 0)
             {
-              await this.fetchLpInfos(contractAddress);
-              this.farmingTotalSfund += this.getTokenInLp(lpFound, this.sfundamount, this.lptotalsupply);
-              this.farmingTotalBnb += this.getTokenInLp(lpFound, this.bnbamount, this.lptotalsupply);
-              this.selected = contractAddress;
+              await this.fetchLpInfos(lpContractAddress);
+              this.farmingTotalSfund += this.getTokenInLp(farmInfos["lpFound"], this.sfundamount, this.lptotalsupply);
+              this.farmingTotalBnb += this.getTokenInLp(farmInfos["lpFound"], this.bnbamount, this.lptotalsupply);
+              this.selected = lpContractAddress;
             }
           }
-
-          this.stakedsfundamount = this.threatTokenTx(tokenTxList, this.$sfundContractAddress, this.$tosdisSfundStackingAddress);
+          const trxToIgnore = await this.getHarvestTrx().then(trxToIgnore => trxToIgnore.map(trx => trx.transactionHash));
+          this.stakedsfundamount = this.threatTokenTx(tokenTxList, this.$sfundContractAddress, this.$tosdisSfundStakingAddress, trxToIgnore);
           this.walletsfundsupply = this.$options.filters.amountdecimal(await this.getContractBalance(this.$sfundContractAddress, this.walletaddress));
           this.loadingWalletInfos = false;
         },
+
         async getEndBlock () {
           await this.canCallApi();
           return this.$http
@@ -146,8 +151,8 @@ new Vue({
             this.errored = true
           })
         },
+
         async getTokenTxList () {
-          this.lpfound = 0;
           if(this.errored = !this.isValidAddress(this.walletaddress))
           {
             this.error = "Invalid address";
@@ -166,25 +171,29 @@ new Vue({
               })
               .finally(() => this.loading = false);
         },
-        threatTokenTx (tokenTxList, tokenContractAddress, stackingContractAddress)
+        // used to compute all transactions about one contract, simply + when trx "to" and - when trx "from"
+        threatTokenTx (tokenTxList, tokenContractAddress, stakingContractAddress, trxToIgnore = [])
         {
-          this.lpfound = 0;
+          let lpfound = 0;
           let lastHash = "";
           let ignore = false;
           tokenTxList = tokenTxList.filter(
             tokenTx => (
-              ignore = lastHash == tokenTx.hash,
+              // we want to ignore the second transaction in the same hash (1st = unstake/stake, 2nd = auto harvest)
+              ignore = lastHash == tokenTx.hash || trxToIgnore.includes(tokenTx.hash),
               lastHash = tokenTx.hash,
-              !ignore && this.compareIgnoreCase(tokenTx.contractAddress, tokenContractAddress) 
-              && (this.compareIgnoreCase(tokenTx.to, stackingContractAddress) || this.compareIgnoreCase(tokenTx.from, stackingContractAddress))
-            ));
+              !ignore && 
+              this.compareIgnoreCase(tokenTx.contractAddress, tokenContractAddress) 
+              && (this.compareIgnoreCase(tokenTx.to, stakingContractAddress) || this.compareIgnoreCase(tokenTx.from, stakingContractAddress))
+              ));
             tokenTxList.forEach(
               tokenTx => (
-                this.compareIgnoreCase(tokenTx.to, stackingContractAddress) ? this.lpfound+=parseInt(tokenTx.value) : this.lpfound-=parseInt(tokenTx.value)
+                this.compareIgnoreCase(tokenTx.to, stakingContractAddress) ? lpfound+=parseInt(tokenTx.value) : lpfound-=parseInt(tokenTx.value)
               )
             );
-            return this.$options.filters.amountdecimal(this.lpfound);
+            return this.$options.filters.amountdecimal(lpfound);
         },
+
         isValidAddress (address) {
           if(/^(0x)?[0-9a-f]{40}$/i.test(address))
           {
@@ -192,9 +201,11 @@ new Vue({
           }
           return false;
         },
+
         compareIgnoreCase (s1, s2) {
           return s1.toUpperCase() == s2.toUpperCase();
         },
+
         fetchTokensPrices () {
           this.loadingPrice = true;
           this.$http
@@ -206,19 +217,17 @@ new Vue({
           })
           .finally(() => this.loadingPrice = false, setTimeout(() => {this.fetchTokensPrices()}, 300000));
         },
+
         async fetchLpInfos (selected) {
           this.loadingLpInfos = true;
-          selected = selected === undefined ? this.selected : selected;
-          
-          this.lptotalsupply = await this.getTokenSupply(selected);
-
-          this.lpnumber = this.lpInfos.get(selected);
-
-          this.bnbamount = await this.getContractBalance(this.$bnbContractAddress, selected);
-
-          this.sfundamount = await this.getContractBalance(this.$sfundContractAddress, selected);
+          const selectedLp = selected === undefined ? this.selected : selected;
+          this.lptotalsupply = await this.getTokenSupply(selectedLp);
+          this.bnbamount = await this.getContractBalance(this.$bnbContractAddress, selectedLp);
+          this.sfundamount = await this.getContractBalance(this.$sfundContractAddress, selectedLp);
+          this.lpnumber = this.$lpList[selectedLp]["lpFound"];
           this.loadingLpInfos = false;
         },
+
         async getTokenSupply(contract)
         {
           await this.canCallApi();
@@ -230,6 +239,7 @@ new Vue({
             this.errored = true
           });
         },
+
         async getContractBalance (contract, addr)
         {
           await this.canCallApi();
@@ -241,6 +251,23 @@ new Vue({
             this.errored = true
           })
         },
+        
+        // We need to identify harvest trx to ignore it (only usefull for staking pool)
+        async getHarvestTrx ()
+        {
+          await this.canCallApi();
+          return this.$http
+          .get(this.$apiRoute+'module=logs&action=getLogs&fromBlock='+this.$startBlock+'&toBlock=latest&address='
+          + this.$tosdisSfundStakingAddress+'&topic0='+this.$harvestTopic+'&topic1=0x000000000000000000000000'
+          + this.walletaddress.substring(2)+'&apikey='+this.$apiKey)
+          .then(function(response) {return response.data.result;})
+          .catch(error => {
+            console.log(error)
+            this.errored = true
+          })
+        },
+
+        // little bridle for api call (limited to 5 calls / sec / IP)
         canCallApi ()
         {
           this.apiCalls.push(new Date());
