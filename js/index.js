@@ -29,6 +29,7 @@ Vue.prototype.$lpList = {
 }
 // topic known as harvest action
 Vue.prototype.$harvestTopic = "0x933735aa8de6d7547d0126171b2f31b9c34dd00f3ecd4be85a0ba047db4fafef";
+Vue.prototype.$onlyHarvest = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 // staking contracts
 Vue.prototype.$tosdisSfundStakingAddress = "0xF17C06eb029F6Ab934E09CA4766eC373A78081B3";
@@ -133,7 +134,7 @@ new Vue({
               this.selected = lpContractAddress;
             }
           }
-          const trxToIgnore = await this.getHarvestTrx().then(trxToIgnore => trxToIgnore.map(trx => trx.transactionHash));
+          const trxToIgnore = await this.getHarvestTrx().then(trxToIgnore => trxToIgnore.filter(trx => trx.data.substring(0, 66) == this.$onlyHarvest).map(trx => trx.transactionHash));
           this.stakedsfundamount = this.threatTokenTx(tokenTxList, this.$sfundContractAddress, this.$tosdisSfundStakingAddress, trxToIgnore);
           this.walletsfundsupply = this.$options.filters.amountdecimal(await this.getContractBalance(this.$sfundContractAddress, this.walletaddress));
           this.loadingWalletInfos = false;
@@ -251,7 +252,6 @@ new Vue({
             this.errored = true
           })
         },
-        
         // We need to identify harvest trx to ignore it (only usefull for staking pool)
         async getHarvestTrx ()
         {
@@ -268,7 +268,7 @@ new Vue({
         },
 
         // little bridle for api call (limited to 5 calls / sec / IP)
-        canCallApi ()
+        async canCallApi ()
         {
           this.apiCalls.push(new Date());
           if(this.apiCalls.length > 5)

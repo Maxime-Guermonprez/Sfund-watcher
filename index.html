@@ -83,7 +83,7 @@
 										</div>
 									</div>
 								</div>
-								<div v-if="loadingWalletInfos">Loading...</div>
+								<div v-if="loadingWalletInfos" class="square token-plate summary">Loading...</div>
 								<div v-else-if="stakedsfundamount || farmingTotalSfund || walletsfundsupply" class="square token-plate summary">
 									<div v-if="farmingTotalSfund">
 										<h3>Farming :</h3>
@@ -108,14 +108,14 @@
 							</div>
 						</div>
 					</div>
-					<footer class="footer">
-						<p style="font-size: 12px;">You love this tool and want to tip me ?<br>0x6F93A5FA5763779114Bdc1Bac32EACe0cf8a6D95</p>
-						<p>Powered by CoinGecko API</p>
-						<p>Powered by BscScan.com APIs</p>
-					</footer>
 				</div>
 			</div>
 		</div>
+		<footer class="footer">
+			<p style="font-size: 12px;">You love this tool and want to tip me ?<br>0x6F93A5FA5763779114Bdc1Bac32EACe0cf8a6D95</p>
+			<p>Powered by CoinGecko API</p>
+			<p>Powered by BscScan.com APIs</p>
+		</footer>
 		<script src="./js/index.js"></script>
 	</body>
 </html>
