@@ -1,109 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
-		<link defer rel="stylesheet" href="./styles.css" />
-		<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous"></script>
-		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-		<script defer src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-		<title>Sfund watcher</title>
-	</head>
-	<body>
-		<div id="root">
-			<div class="frame" id="coin-infos">
-				<nav>
-					<img src="./assets/seedy.png" height="60px" width="60px" title="Seedy ! The seedify.fund mascotte">
-					<div class="walletaddress"><input v-model="walletaddress" placeholder="BEP20 Wallet Address" class="wallet-addr">
-						<button v-on:click="getWalletInfos" aria-label="search">
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-								<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
-							</svg>
-						</button>
-					</div>
-					<select v-model="selectedCurrency" v-on:change="fetchTokensPrices" class="currency-list">
-						<option v-for="currency in currencyList" :value="currency.value" :key="currency.value">{{ currency.displayed }}</option>
-					</select>
-				</nav>
-				<div class="main">
-					<div id="app" class="app">
-						<div>
-							<div v-if="loadingPrice">Loading...</div>
-							<div v-else class="grid">
-								<coin-info 
-										v-for="(info, name) in infos" 
-										class="square token-plate"
-										v-bind:key="name"
-										v-bind:name="name"
-										v-bind:infos="info"
-										v-bind:currency="selectedCurrency"
-										v-bind:currencylist="currencyList"
-										v-bind:class="{ positive: info[selectedCurrency+'_24h_change'] > 0, negative: info[selectedCurrency+'_24h_change'] < 0 }"
-								>						
-								</coin-info>
-							</div>
-							<div class="grid">
-								<div class="square token-plate">
-									<section v-if="errored" class="error">
-										<p>{{ error }}</p>
-									</section>
-									<div style="height: 45px;">
-										<label v-for="opt in options" v-bind:key="opt.text">
-											<input type="radio" v-model="selected" :value="opt.value" :name="opt.text" v-on:change="fetchLpInfos(selected)" />
-											<img :src="opt.src" height="40px" :title="opt.text">
-										</label>
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+	<link defer rel="stylesheet" href="./styles.css" />
+	<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+		integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+		crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+	<script defer src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+	<title>Sfund watcher</title>
+</head>
+
+<body>
+	<div id="root">
+		<div class="frame" id="coin-infos">
+			<nav>
+				<img src="./assets/seedy.png" height="60px" width="60px" title="Seedy ! The seedify.fund mascotte">
+				<div class="walletaddress"><input v-model="walletaddress" placeholder="BEP20 Wallet Address"
+						class="wallet-addr">
+					<button v-on:click="getWalletInfos" aria-label="search">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search"
+							viewBox="0 0 16 16">
+							<path
+								d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z">
+							</path>
+						</svg>
+					</button>
+				</div>
+				<select v-model="selectedCurrency" v-on:change="fetchTokensPrices" class="currency-list">
+					<option v-for="currency in currencyList" :value="currency.value" :key="currency.value">{{ currency.displayed
+						}}</option>
+				</select>
+			</nav>
+			<div class="main">
+				<div id="app" class="app">
+					<div>
+						<div v-if="loadingPrice">Loading...</div>
+						<div v-else class="grid">
+							<coin-info v-for="(info, name) in infos" class="square token-plate" v-bind:key="name" v-bind:name="name"
+								v-bind:infos="info" v-bind:currency="selectedCurrency" v-bind:currencylist="currencyList"
+								v-bind:class="{ positive: info[selectedCurrency+'_24h_change'] > 0, negative: info[selectedCurrency+'_24h_change'] < 0 }">
+							</coin-info>
+						</div>
+						<div class="grid">
+							<div class="square token-plate">
+								<section v-if="errored" class="error">
+									<p>{{ error }}</p>
+								</section>
+								<div style="height: 45px;">
+									<label v-for="opt in options" v-bind:key="opt.text">
+										<input type="radio" v-model="selected" :value="opt.value" :name="opt.text"
+											v-on:change="fetchLpInfos(selected)" />
+										<img :src="opt.src" height="40px" :title="opt.text">
+									</label>
+								</div>
+								<div v-if="loadingLpInfos">Loading...</div>
+								<div v-else>
+									<h3>LP total supply :</h3>
+									<div>
+										{{ lptotalsupply | amountdecimal }} LP
 									</div>
-									<div v-if="loadingLpInfos">Loading...</div>
-									<div v-else>
-										<h3>LP total supply :</h3>
-										<div>
-											{{ lptotalsupply | amountdecimal }} LP
-										</div>
-										<div>
-											{{ bnbamount | amountdecimal }} BNB
-										</div>
-										<div>
-											{{ sfundamount | amountdecimal }} SFUND
-										</div>
+									<div>
+										{{ bnbamount | amountdecimal }} BNB
 									</div>
-									<div v-if="loadingLpInfos || loadingWalletInfos">Loading...</div>
-									<div v-else>
-										<h3>LP calculator :</h3>
-										<div>
-											<input v-model.number="lpnumber" type="number" class="lpcalculator" id="lpnumber">
-											<label for="lpnumber">LP</label> = {{ ( (lpnumber || 1) * ((bnbamount / lptotalsupply) * bnbprice + (sfundamount / lptotalsupply) * sfundprice)).toFixed(2) }} {{ currencyList.find(c => c.value == selectedCurrency).displayed }} 
-										</div>
-										<div>
-											{{ ((lpnumber || 1) * (bnbamount / lptotalsupply)).toFixed(2) }} BNB
-										</div>
-										<div>
-											{{ ((lpnumber || 1) * (sfundamount / lptotalsupply)).toFixed(2) }} SFUND
-										</div>
+									<div>
+										{{ sfundamount | amountdecimal }} SFUND
 									</div>
 								</div>
-								<div v-if="loadingWalletInfos" class="square token-plate summary">Loading...</div>
-								<div v-else-if="stakedsfundamount || farmingTotalSfund || walletsfundsupply" class="square token-plate summary">
-									<div v-if="farmingTotalSfund">
-										<h3>Farming :</h3>
-										{{ (farmingTotalSfund).toFixed(2) }} SFUND ( {{ (farmingTotalSfund * sfundprice).toFixed(2) }} {{ currencyList.find(c => c.value == selectedCurrency).displayed }} )
-									</div>
-									<div v-if="stakedsfundamount">
-										<h3>Staking :</h3>
-										{{ stakedsfundamount }} SFUND ( {{ (stakedsfundamount * sfundprice).toFixed(2) }} {{ currencyList.find(c => c.value == selectedCurrency).displayed }} )
-									</div>
-									<div v-if="walletsfundsupply">
-										<h3>Wallet :</h3>
-										{{ walletsfundsupply }} SFUND ( {{ (walletsfundsupply * sfundprice).toFixed(2) }} {{ currencyList.find(c => c.value == selectedCurrency).displayed }} )
-									</div>
-									<h3>Total : {{ (((farmingTotalSfund + walletsfundsupply + stakedsfundamount) * sfundprice) + (farmingTotalBnb * bnbprice)).toFixed(2) }} {{ currencyList.find(c => c.value == selectedCurrency).displayed }}</h3>
+								<div v-if="loadingLpInfos || loadingWalletInfos">Loading...</div>
+								<div v-else>
+									<h3>LP calculator :</h3>
 									<div>
-										{{ (farmingTotalSfund + walletsfundsupply + stakedsfundamount).toFixed(2)}} SFUND ( {{ ((farmingTotalSfund + walletsfundsupply + stakedsfundamount) * sfundprice).toFixed(2) }} {{ currencyList.find(c => c.value == selectedCurrency).displayed }} )
+										<input v-model.number="lpnumber" type="number" class="lpcalculator" id="lpnumber">
+										<label for="lpnumber">LP</label> = {{ ( (lpnumber || 1) * ((bnbamount / lptotalsupply) * bnbprice +
+										(sfundamount / lptotalsupply) * sfundprice)).toFixed(2) }} {{ currencyList.find(c => c.value ==
+										selectedCurrency).displayed }}
 									</div>
-									<div  v-if="farmingTotalBnb">
-										{{ farmingTotalBnb.toFixed(2) }} BNB ( {{ (farmingTotalBnb * bnbprice).toFixed(2) }} {{ currencyList.find(c => c.value == selectedCurrency).displayed }} )
+									<div>
+										{{ ((lpnumber || 1) * (bnbamount / lptotalsupply)).toFixed(2) }} BNB
 									</div>
+									<div>
+										{{ ((lpnumber || 1) * (sfundamount / lptotalsupply)).toFixed(2) }} SFUND
+									</div>
+								</div>
+							</div>
+							<div v-if="loadingWalletInfos" class="square token-plate summary">Loading...</div>
+							<div v-else-if="stakedsfundamount || farmingTotalSfund || walletsfundsupply"
+								class="square token-plate summary">
+								<div v-if="farmingTotalSfund">
+									<h3>Farming : {{ (farmingTotalSfund * sfundprice + farmingTotalBnb * bnbprice).toFixed(2) }} {{
+										currencyList.find(c => c.value == selectedCurrency).displayed }}</h3>
+									{{ (farmingTotalSfund).toFixed(2) }} SFUND ( {{ (farmingTotalSfund * sfundprice).toFixed(2) }} {{
+									currencyList.find(c => c.value == selectedCurrency).displayed }} )
+									<br>
+									{{ farmingTotalBnb.toFixed(2) }} BNB ( {{ (farmingTotalBnb * bnbprice).toFixed(2) }} {{
+									currencyList.find(c => c.value == selectedCurrency).displayed }} )
+								</div>
+								<div v-if="stakedsfundamount">
+									<h3>Staking : {{ (stakedsfundamount * sfundprice).toFixed(2) }} {{
+										currencyList.find(c => c.value == selectedCurrency).displayed }}</h3>
+									{{ stakedsfundamount }} SFUND
+								</div>
+								<div v-if="walletsfundsupply">
+									<h3>Wallet : {{ (walletsfundsupply * sfundprice).toFixed(2) }} {{
+										currencyList.find(c => c.value == selectedCurrency).displayed }}</h3>
+									{{ walletsfundsupply }} SFUND
+								</div>
+								<h3>Total : {{ (((farmingTotalSfund + walletsfundsupply + stakedsfundamount) * sfundprice) +
+									(farmingTotalBnb * bnbprice)).toFixed(2) }} {{ currencyList.find(c => c.value ==
+									selectedCurrency).displayed }}</h3>
+								<div>
+									{{ (farmingTotalSfund + walletsfundsupply + stakedsfundamount).toFixed(2)}} SFUND ( {{
+									((farmingTotalSfund + walletsfundsupply + stakedsfundamount) * sfundprice).toFixed(2) }} {{
+									currencyList.find(c => c.value == selectedCurrency).displayed }} )
+								</div>
+								<div v-if="farmingTotalBnb">
+									{{ farmingTotalBnb.toFixed(2) }} BNB ( {{ (farmingTotalBnb * bnbprice).toFixed(2) }} {{
+									currencyList.find(c => c.value == selectedCurrency).displayed }} )
 								</div>
 							</div>
 						</div>
@@ -111,11 +128,14 @@
 				</div>
 			</div>
 		</div>
-		<footer class="footer">
-			<p style="font-size: 12px;">You love this tool and want to tip me ?<br>0x6F93A5FA5763779114Bdc1Bac32EACe0cf8a6D95</p>
-			<p>Powered by CoinGecko API</p>
-			<p>Powered by BscScan.com APIs</p>
-		</footer>
-		<script src="./js/index.js"></script>
-	</body>
+	</div>
+	<footer class="footer">
+		<p style="font-size: 12px;">You love this tool and want to tip me ?<br>0x6F93A5FA5763779114Bdc1Bac32EACe0cf8a6D95
+		</p>
+		<p>Powered by CoinGecko API</p>
+		<p>Powered by BscScan.com APIs</p>
+	</footer>
+	<script src="./js/index.js"></script>
+</body>
+
 </html>
