@@ -62,13 +62,13 @@
 								<div v-else>
 									<h3>LP total supply :</h3>
 									<div>
-										{{ lptotalsupply | amountdecimal }} LP
+										{{ lptotalsupply.toFixed(2) }} LP
 									</div>
 									<div>
-										{{ bnbamount | amountdecimal }} BNB
+										{{ bnbamount.toFixed(2) }} BNB
 									</div>
 									<div>
-										{{ sfundamount | amountdecimal }} SFUND
+										{{ sfundamount.toFixed(2) }} SFUND
 									</div>
 								</div>
 								<div v-if="loadingLpInfos || loadingWalletInfos">Loading...</div>
@@ -89,38 +89,115 @@
 								</div>
 							</div>
 							<div v-if="loadingWalletInfos" class="square token-plate summary">Loading...</div>
-							<div v-else-if="stakedsfundamount || farmingTotalSfund || walletsfundsupply"
+							<div v-else-if="stakedSfundAmount || farmingTotalSfund || walletsfundsupply"
 								class="square token-plate summary">
+								<h3>Total : {{ (((farmingTotalSfund + walletsfundsupply + stakedSfundAmount + stakedSfundToHarvest) *
+									sfundprice) +
+									(farmingTotalBnb * bnbprice)).toFixed(2) }} {{ currencyList.find(c => c.value ==
+									selectedCurrency).displayed }}</h3>
+								<div>
+									{{ (farmingTotalSfund + walletsfundsupply + + stakedSfundAmount + stakedSfundToHarvest).toFixed(2)}}
+									SFUND ( {{
+									((farmingTotalSfund + walletsfundsupply + + stakedSfundAmount + stakedSfundToHarvest) *
+									sfundprice).toFixed(2) }} {{
+									currencyList.find(c => c.value == selectedCurrency).displayed }} )
+								</div>
+								<div v-if="farmingTotalBnb">
+									{{ farmingTotalBnb.toFixed(2) }} BNB ( {{ (farmingTotalBnb * bnbprice).toFixed(2) }} {{
+									currencyList.find(c => c.value == selectedCurrency).displayed }} )
+								</div>
 								<div v-if="farmingTotalSfund">
 									<h3>Farming : {{ (farmingTotalSfund * sfundprice + farmingTotalBnb * bnbprice).toFixed(2) }} {{
 										currencyList.find(c => c.value == selectedCurrency).displayed }}</h3>
-									{{ (farmingTotalSfund).toFixed(2) }} SFUND ( {{ (farmingTotalSfund * sfundprice).toFixed(2) }} {{
+									<strong>Staked :</strong><br>
+									{{ (farmingTotalSfundStaked).toFixed(2) }} SFUND ( {{ (farmingTotalSfundStaked *
+									sfundprice).toFixed(2) }}
+									{{
 									currencyList.find(c => c.value == selectedCurrency).displayed }} )
 									<br>
 									{{ farmingTotalBnb.toFixed(2) }} BNB ( {{ (farmingTotalBnb * bnbprice).toFixed(2) }} {{
 									currencyList.find(c => c.value == selectedCurrency).displayed }} )
+									<br>
+									<strong>To harvest :</strong><br>
+									{{ farmingTotalSfundToHarvest.toFixed(2) }} SFUND ( {{ (farmingTotalSfundToHarvest *
+									sfundprice).toFixed(2) }} {{
+									currencyList.find(c => c.value == selectedCurrency).displayed }} )
 								</div>
-								<div v-if="stakedsfundamount">
-									<h3>Staking : {{ (stakedsfundamount * sfundprice).toFixed(2) }} {{
+								<div v-if="stakedSfundAmount">
+									<h3>Staking : {{ ((stakedSfundAmount + stakedSfundToHarvest) * sfundprice).toFixed(2) }} {{
 										currencyList.find(c => c.value == selectedCurrency).displayed }}</h3>
-									{{ stakedsfundamount }} SFUND
+									<strong>Staked :</strong><br>
+									{{ stakedSfundAmount.toFixed(2) }} SFUND ( {{ (stakedSfundAmount *
+									sfundprice).toFixed(2) }} {{
+									currencyList.find(c => c.value == selectedCurrency).displayed }} )
+									<br>
+									<strong>To harvest :</strong><br>
+									{{ stakedSfundToHarvest.toFixed(2) }} SFUND ( {{ (stakedSfundToHarvest *
+									sfundprice).toFixed(2) }} {{
+									currencyList.find(c => c.value == selectedCurrency).displayed }} )
 								</div>
 								<div v-if="walletsfundsupply">
 									<h3>Wallet : {{ (walletsfundsupply * sfundprice).toFixed(2) }} {{
 										currencyList.find(c => c.value == selectedCurrency).displayed }}</h3>
 									{{ walletsfundsupply }} SFUND
 								</div>
-								<h3>Total : {{ (((farmingTotalSfund + walletsfundsupply + stakedsfundamount) * sfundprice) +
-									(farmingTotalBnb * bnbprice)).toFixed(2) }} {{ currencyList.find(c => c.value ==
-									selectedCurrency).displayed }}</h3>
-								<div>
-									{{ (farmingTotalSfund + walletsfundsupply + stakedsfundamount).toFixed(2)}} SFUND ( {{
-									((farmingTotalSfund + walletsfundsupply + stakedsfundamount) * sfundprice).toFixed(2) }} {{
-									currencyList.find(c => c.value == selectedCurrency).displayed }} )
+							</div>
+						</div>
+						<div class="grid">
+							<div v-if="stakedSfundAmount || farmingTotalSfund" class="square token-plate summary">
+								<h3>Earning estimations</h3>
+								<div v-if="stakedSfundAmount && farmingTotalSfund">
+									<span id="total">Total :</span>
+									<table aria-describedby="total">
+										<thead>
+											<th scope="col">Hour</th>
+											<th scope="col">Day</th>
+											<th scope="col">Week</th>
+											<th scope="col">Month</th>
+										</thead>
+										<tr>
+											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60).toFixed(2)}}</td>
+											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24).toFixed(2)}}</td>
+											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24 * 7).toFixed(2)}}</td>
+											<td>{{((reward.staking.amount * reward.staking.duration) + (reward.farming.amount *
+												reward.farming.duration) ).toFixed(2)}}
+											</td>
+										</tr>
+									</table>
 								</div>
-								<div v-if="farmingTotalBnb">
-									{{ farmingTotalBnb.toFixed(2) }} BNB ( {{ (farmingTotalBnb * bnbprice).toFixed(2) }} {{
-									currencyList.find(c => c.value == selectedCurrency).displayed }} )
+								<div v-if="stakedSfundAmount">
+									<span id="staking">Staking :</span>
+									<table aria-describedby="staking">
+										<thead>
+											<th scope="col">Hour</th>
+											<th scope="col">Day</th>
+											<th scope="col">Week</th>
+											<th scope="col">Month</th>
+										</thead>
+										<tr>
+											<td>{{(reward.staking.amount * 60 * 60).toFixed(2)}}</td>
+											<td>{{(reward.staking.amount * 60 * 60 * 24).toFixed(2)}}</td>
+											<td>{{(reward.staking.amount * 60 * 60 * 24 * 7).toFixed(2)}}</td>
+											<td>{{(reward.staking.amount * reward.staking.duration).toFixed(2)}}</td>
+										</tr>
+									</table>
+								</div>
+								<div v-if="farmingTotalSfund">
+									<span if="farming">Farming :</span>
+									<table aria-describedby="farming">
+										<thead>
+											<th scope="col">Hour</th>
+											<th scope="col">Day</th>
+											<th scope="col">Week</th>
+											<th scope="col">Month</th>
+										</thead>
+										<tr>
+											<td>{{(reward.farming.amount * 60 * 60).toFixed(2)}}</td>
+											<td>{{(reward.farming.amount * 60 * 60 * 24).toFixed(2)}}</td>
+											<td>{{(reward.farming.amount * 60 * 60 * 24 * 7).toFixed(2)}}</td>
+											<td>{{(reward.farming.amount * reward.farming.duration).toFixed(2)}}</td>
+										</tr>
+									</table>
 								</div>
 							</div>
 						</div>
