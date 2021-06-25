@@ -2,6 +2,9 @@
 <html lang="en">
 
 <head>
+	<link rel="icon" href="https://seedify.fund/wp-content/uploads/2021/01/cropped-Asset-6-1-32x32.png" sizes="32x32">
+	<link rel="icon" href="https://seedify.fund/wp-content/uploads/2021/01/cropped-Asset-6-1-192x192.png" sizes="192x192">
+	<link rel="apple-touch-icon" href="https://seedify.fund/wp-content/uploads/2021/01/cropped-Asset-6-1-180x180.png">
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
@@ -147,15 +150,17 @@
 							<div v-if="stakedSfundAmount || farmingTotalSfund" class="square token-plate summary">
 								<h3>Earning estimations</h3>
 								<div v-if="stakedSfundAmount && farmingTotalSfund">
-									<span id="total">Total :</span>
+									<span id="total"><strong>Total :</strong></span>
 									<table aria-describedby="total">
 										<thead>
+											<th scope="col"></th>
 											<th scope="col">Hour</th>
 											<th scope="col">Day</th>
 											<th scope="col">Week</th>
 											<th scope="col">Month</th>
 										</thead>
 										<tr>
+											<td>SFUND</td>
 											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60).toFixed(2)}}</td>
 											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24).toFixed(2)}}</td>
 											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24 * 7).toFixed(2)}}</td>
@@ -163,41 +168,75 @@
 												reward.farming.duration) ).toFixed(2)}}
 											</td>
 										</tr>
+										<tr>
+											<td>{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
+											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * sfundprice).toFixed(2)}}</td>
+											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24 * sfundprice).toFixed(2)}}
+											</td>
+											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24 * 7 *
+												sfundprice).toFixed(2)}}</td>
+											<td>{{(((reward.staking.amount * reward.staking.duration) + (reward.farming.amount *
+												reward.farming.duration) ) * sfundprice).toFixed(2)}}
+											</td>
+										</tr>
 									</table>
 								</div>
 								<div v-if="stakedSfundAmount">
-									<span id="staking">Staking :</span>
+									<span id="staking"><strong>Staking :</strong></span>
 									<table aria-describedby="staking">
 										<thead>
+											<th scope="col"></th>
 											<th scope="col">Hour</th>
 											<th scope="col">Day</th>
 											<th scope="col">Week</th>
 											<th scope="col">Month</th>
 										</thead>
 										<tr>
+											<td>SFUND</td>
 											<td>{{(reward.staking.amount * 60 * 60).toFixed(2)}}</td>
 											<td>{{(reward.staking.amount * 60 * 60 * 24).toFixed(2)}}</td>
 											<td>{{(reward.staking.amount * 60 * 60 * 24 * 7).toFixed(2)}}</td>
 											<td>{{(reward.staking.amount * reward.staking.duration).toFixed(2)}}</td>
 										</tr>
+										<tr>
+											<td>{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
+											<td>{{((reward.staking.amount ) * 60 * 60 * sfundprice).toFixed(2)}}</td>
+											<td>{{((reward.staking.amount ) * 60 * 60 * 24 * sfundprice).toFixed(2)}}</td>
+											<td>{{((reward.staking.amount ) * 60 * 60 * 24 * 7 * sfundprice).toFixed(2)}}</td>
+											<td>{{((reward.staking.amount * reward.staking.duration) * sfundprice).toFixed(2)}}
+											</td>
+										</tr>
 									</table>
 								</div>
 								<div v-if="farmingTotalSfund">
-									<span if="farming">Farming :</span>
+									<span if="farming"><strong>Farming :</strong></span>
 									<table aria-describedby="farming">
 										<thead>
+											<th scope="col"></th>
 											<th scope="col">Hour</th>
 											<th scope="col">Day</th>
 											<th scope="col">Week</th>
 											<th scope="col">Month</th>
 										</thead>
 										<tr>
+											<td>SFUND</td>
 											<td>{{(reward.farming.amount * 60 * 60).toFixed(2)}}</td>
 											<td>{{(reward.farming.amount * 60 * 60 * 24).toFixed(2)}}</td>
 											<td>{{(reward.farming.amount * 60 * 60 * 24 * 7).toFixed(2)}}</td>
 											<td>{{(reward.farming.amount * reward.farming.duration).toFixed(2)}}</td>
 										</tr>
+										<tr>
+											<td>{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
+											<td>{{((reward.farming.amount) * 60 * 60 * sfundprice).toFixed(2)}}</td>
+											<td>{{((reward.farming.amount) * 60 * 60 * 24 * sfundprice).toFixed(2)}}
+											</td>
+											<td>{{((reward.farming.amount) * 60 * 60 * 24 * 7 * sfundprice).toFixed(2)}}</td>
+											<td>{{( (reward.farming.amount * reward.farming.duration) * sfundprice).toFixed(2)}}
+											</td>
+										</tr>
 									</table>
+									<span><em>* These estimates are calculated with current data from the staking and farming pools and
+											are subject to change at any time</em></span>
 								</div>
 							</div>
 						</div>
@@ -210,7 +249,6 @@
 		<p style="font-size: 12px;">You love this tool and want to tip me ?<br>0x6F93A5FA5763779114Bdc1Bac32EACe0cf8a6D95
 		</p>
 		<p>Powered by CoinGecko API</p>
-		<p>Powered by BscScan.com APIs</p>
 	</footer>
 	<script src="./js/index.js"></script>
 </body>
