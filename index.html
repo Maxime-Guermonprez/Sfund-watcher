@@ -147,20 +147,19 @@
 							</div>
 						</div>
 						<div class="grid">
-							<div v-if="stakedSfundAmount || farmingTotalSfund" class="square token-plate summary">
+							<div v-if="loadingWalletInfos" class="square token-plate summary">Loading...</div>
+							<div v-else-if="stakedSfundAmount || farmingTotalSfund" class="square token-plate summary">
 								<h3>Earning estimations</h3>
 								<div v-if="stakedSfundAmount && farmingTotalSfund">
 									<span id="total"><strong>Total :</strong></span>
 									<table aria-describedby="total">
 										<thead>
-											<th scope="col"></th>
 											<th scope="col">Hour</th>
 											<th scope="col">Day</th>
 											<th scope="col">Week</th>
 											<th scope="col">Month</th>
 										</thead>
 										<tr>
-											<td>SFUND</td>
 											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60).toFixed(2)}}</td>
 											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24).toFixed(2)}}</td>
 											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24 * 7).toFixed(2)}}</td>
@@ -169,14 +168,18 @@
 											</td>
 										</tr>
 										<tr>
-											<td>{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
-											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * sfundprice).toFixed(2)}}</td>
+											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
 											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24 * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}
 											</td>
 											<td>{{((reward.staking.amount + reward.farming.amount) * 60 * 60 * 24 * 7 *
-												sfundprice).toFixed(2)}}</td>
+												sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}
+											</td>
 											<td>{{(((reward.staking.amount * reward.staking.duration) + (reward.farming.amount *
 												reward.farming.duration) ) * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}
 											</td>
 										</tr>
 									</table>
@@ -185,25 +188,26 @@
 									<span id="staking"><strong>Staking :</strong></span>
 									<table aria-describedby="staking">
 										<thead>
-											<th scope="col"></th>
 											<th scope="col">Hour</th>
 											<th scope="col">Day</th>
 											<th scope="col">Week</th>
 											<th scope="col">Month</th>
 										</thead>
 										<tr>
-											<td>SFUND</td>
 											<td>{{(reward.staking.amount * 60 * 60).toFixed(2)}}</td>
 											<td>{{(reward.staking.amount * 60 * 60 * 24).toFixed(2)}}</td>
 											<td>{{(reward.staking.amount * 60 * 60 * 24 * 7).toFixed(2)}}</td>
 											<td>{{(reward.staking.amount * reward.staking.duration).toFixed(2)}}</td>
 										</tr>
 										<tr>
-											<td>{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
-											<td>{{((reward.staking.amount ) * 60 * 60 * sfundprice).toFixed(2)}}</td>
-											<td>{{((reward.staking.amount ) * 60 * 60 * 24 * sfundprice).toFixed(2)}}</td>
-											<td>{{((reward.staking.amount ) * 60 * 60 * 24 * 7 * sfundprice).toFixed(2)}}</td>
+											<td>{{((reward.staking.amount ) * 60 * 60 * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
+											<td>{{((reward.staking.amount ) * 60 * 60 * 24 * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
+											<td>{{((reward.staking.amount ) * 60 * 60 * 24 * 7 * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
 											<td>{{((reward.staking.amount * reward.staking.duration) * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}
 											</td>
 										</tr>
 									</table>
@@ -212,26 +216,27 @@
 									<span if="farming"><strong>Farming :</strong></span>
 									<table aria-describedby="farming">
 										<thead>
-											<th scope="col"></th>
 											<th scope="col">Hour</th>
 											<th scope="col">Day</th>
 											<th scope="col">Week</th>
 											<th scope="col">Month</th>
 										</thead>
 										<tr>
-											<td>SFUND</td>
 											<td>{{(reward.farming.amount * 60 * 60).toFixed(2)}}</td>
 											<td>{{(reward.farming.amount * 60 * 60 * 24).toFixed(2)}}</td>
 											<td>{{(reward.farming.amount * 60 * 60 * 24 * 7).toFixed(2)}}</td>
 											<td>{{(reward.farming.amount * reward.farming.duration).toFixed(2)}}</td>
 										</tr>
 										<tr>
-											<td>{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
-											<td>{{((reward.farming.amount) * 60 * 60 * sfundprice).toFixed(2)}}</td>
+											<td>{{((reward.farming.amount) * 60 * 60 * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
 											<td>{{((reward.farming.amount) * 60 * 60 * 24 * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}
 											</td>
-											<td>{{((reward.farming.amount) * 60 * 60 * 24 * 7 * sfundprice).toFixed(2)}}</td>
+											<td>{{((reward.farming.amount) * 60 * 60 * 24 * 7 * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}</td>
 											<td>{{( (reward.farming.amount * reward.farming.duration) * sfundprice).toFixed(2)}}
+												{{ currencyList.find(c => c.value == selectedCurrency).displayed }}
 											</td>
 										</tr>
 									</table>

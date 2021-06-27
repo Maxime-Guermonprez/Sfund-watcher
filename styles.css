@@ -48,11 +48,12 @@
 }
 
 .square {
-	min-width: 280px;
+	min-width: 300px;
     max-width: 31.5%;
 }
 
 table td {
+    font-size: 14px;
     border: solid 1px #171924;
 }
 
@@ -103,7 +104,7 @@ table {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    padding: 24px;
+    padding: 12px;
     position: relative;
     text-align: center;
 	box-sizing: border-box;

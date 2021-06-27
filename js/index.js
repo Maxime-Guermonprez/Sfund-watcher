@@ -57,7 +57,11 @@ new Vue({
     reward: { staking: { amount: 0, duration: 0 }, farming: { amount: 0, duration: 0 } },
     currencyList: [
       { value: 'eur', displayed: '€' },
-      { value: 'usd', displayed: '$' }
+      { value: 'usd', displayed: '$' },
+      { value: 'jpy', displayed: '¥' },
+      { value: 'gbp', displayed: '£' },
+      { value: 'aud', displayed: '$AU' },
+      { value: 'rub', displayed: '₽' }
     ],
     selectedCurrency: 'eur',
     selected: "0x74fA517715C4ec65EF01d55ad5335f90dce7CC87",
@@ -109,14 +113,16 @@ new Vue({
       this.$http
         .get("https://sfundwatcher.herokuapp.com/wallet/" + this.walletaddress)
         .then(response => {
-          console.log(response)
+          this.reward.farming.amount = 0
+          this.farmingTotalSfundStaked = 0
+          this.farmingTotalSfundToHarvest = 0
           this.farmingTotalBnb = response.data.farming.total.wbnb
           this.farmingTotalSfund = response.data.farming.total.sfund
           this.stakedSfundAmount = response.data.staking.details[0].tokens.sfund
           this.stakedSfundToHarvest = response.data.staking.details[0].pendingReward.sfund
           this.reward.staking.amount = response.data.staking.details[0].rewardPerSec
           this.reward.staking.duration = response.data.staking.details[0].duration
-          this.walletsfundsupply = response.data.wallet.sfund
+          this.walletsfundsupply = parseFloat(response.data.wallet.sfund.toFixed(2))
           for (const farm of response.data.farming.details) {
             const contractAddr = this.options.find((option) => option.symbol == farm.symbol).value
             this.$lpList[contractAddr]["lpFound"] = farm.lp
@@ -163,7 +169,6 @@ new Vue({
       const selectedLp = selected === undefined ? this.selected : selected;
       this.$http
         .get("https://sfundwatcher.herokuapp.com/lp/" + selectedLp).then(response => {
-          console.log(response.data.totalSupply);
           var data = response.data
           this.lptotalsupply = data.totalSupply
           this.bnbamount = data.tokens.find((token) => token.symbol == "wbnb").amount
